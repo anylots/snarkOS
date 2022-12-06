@@ -34,7 +34,7 @@ use rand::{rngs::OsRng, CryptoRng, Rng};
 use std::{
     net::SocketAddr,
     sync::{
-        atomic::{AtomicBool, AtomicU8, Ordering},
+        atomic::{AtomicBool, AtomicU32, AtomicU8, Ordering},
         Arc,
     },
 };
@@ -64,6 +64,9 @@ pub struct Prover<N: Network, C: ConsensusStorage<N>> {
     shutdown: Arc<AtomicBool>,
     /// PhantomData.
     _phantom: PhantomData<C>,
+
+    solutions_prove: Arc<AtomicU32>,
+
 }
 
 impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
@@ -101,6 +104,8 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
             handles: Default::default(),
             shutdown: Default::default(),
             _phantom: Default::default(),
+            solutions_prove: Default::default(),
+
         };
         // Initialize the routing.
         node.initialize_routing().await;
@@ -209,7 +214,8 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
     ) -> Option<(u64, ProverSolution<N>)> {
         // Increment the puzzle instances.
         self.increment_puzzle_instances();
-       
+        prover.solutions_prove.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
         let prover = self.clone();
         let solutions = prover.solutions_prove.load(std::sync::atomic::Ordering::SeqCst);
 
