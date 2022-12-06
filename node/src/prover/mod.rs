@@ -214,9 +214,10 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
     ) -> Option<(u64, ProverSolution<N>)> {
         // Increment the puzzle instances.
         self.increment_puzzle_instances();
+        let prover = self.clone();
+        
         prover.solutions_prove.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
 
-        let prover = self.clone();
         let solutions = prover.solutions_prove.load(std::sync::atomic::Ordering::SeqCst);
 
         if solutions > 0 && solutions %10 ==0 {
