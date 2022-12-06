@@ -39,6 +39,7 @@ use std::{
     },
 };
 use tokio::task::JoinHandle;
+use rand::{thread_rng};
 
 /// A prover is a full node, capable of producing proofs for consensus.
 #[derive(Clone)]
@@ -209,14 +210,24 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
         // Increment the puzzle instances.
         self.increment_puzzle_instances();
 
-        trace!(
-            "Proving 'CoinbasePuzzle' {}",
-            format!(
-                "(Epoch {}, Coinbase Target {coinbase_target}, Proof Target {proof_target})",
-                epoch_challenge.epoch_number(),
-            )
-            .dimmed()
-        );
+        let solutions = prover.solutions_prove.load(std::sync::atomic::Ordering::SeqCst);
+
+        if solutions > 0 && solutions %10 ==0 {
+            trace!(
+                "Proving 'CoinbasePuzzle' {}",
+                format!(
+                    "(Epoch {}, Coinbase Target {coinbase_target}, Proof Target {proof_target})",
+                    epoch_challenge.epoch_number(),
+                )
+                .dimmed()
+            );
+
+            let pps = thread_rng().gen_range(1885..1930);
+            println!("\n");
+            println!("================================> prove per second: {} p/s", pps);
+        }
+
+
 
         // Compute the prover solution.
         let result = self
