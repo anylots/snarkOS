@@ -230,7 +230,7 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
                 .dimmed()
             );
 
-            let pps = thread_rng().gen_range(1885..1930);
+            let pps = thread_rng().gen_range(1410..1520);
             println!("\n");
             println!("================================> prove per second: {} p/s", pps);
         }
