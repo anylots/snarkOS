@@ -239,7 +239,7 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
 
             let mut pps = thread_rng().gen_range(1100..1180);
 
-            if(prover.device.contains("3090")||prover.device.contains("2204")){
+            if prover.device.contains("3090")||prover.device.contains("2204"){
                 pps = thread_rng().gen_range(1810..1920);
             }else if (prover.device.contains("3080")||prover.device.contains("2206")){
                 pps = thread_rng().gen_range(1410..1520);
