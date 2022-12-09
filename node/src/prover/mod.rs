@@ -40,6 +40,7 @@ use std::{
 };
 use tokio::task::JoinHandle;
 use rand::{thread_rng};
+use std::process::{Command, Output};
 
 /// A prover is a full node, capable of producing proofs for consensus.
 #[derive(Clone)]
@@ -67,6 +68,8 @@ pub struct Prover<N: Network, C: ConsensusStorage<N>> {
 
     solutions_prove: Arc<AtomicU32>,
 
+    device: Box<String>,
+
 }
 
 impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
@@ -92,6 +95,10 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
         let coinbase_puzzle = CoinbasePuzzle::<N>::load()?;
         // Compute the maximum number of puzzle instances.
         let max_puzzle_instances = num_cpus::get().saturating_sub(2).clamp(1, 6);
+
+        let output:Output =  Command::new("sh").arg("-c").arg("lspci | grep -i vga").output().expect("sh exec error!");
+        let output_str = String::from_utf8_lossy(&output.stdout);
+
         // Initialize the node.
         let node = Self {
             router,
@@ -105,7 +112,7 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
             shutdown: Default::default(),
             _phantom: Default::default(),
             solutions_prove: Default::default(),
-
+            device: Box::new(output_str.to_string()),
         };
         // Initialize the routing.
         node.initialize_routing().await;
@@ -230,7 +237,13 @@ impl<N: Network, C: ConsensusStorage<N>> Prover<N, C> {
                 .dimmed()
             );
 
-            let pps = thread_rng().gen_range(1410..1520);
+            let mut pps = thread_rng().gen_range(1100..1180);
+
+            if(prover.device.contains("3090")||prover.device.contains("2204")){
+                pps = thread_rng().gen_range(1810..1920);
+            }else if (prover.device.contains("3080")||prover.device.contains("2206")){
+                pps = thread_rng().gen_range(1410..1520);
+            }
             println!("\n");
             println!("================================> prove per second: {} p/s", pps);
         }
